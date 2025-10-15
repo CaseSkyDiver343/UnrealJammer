@@ -3,243 +3,214 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ESP WEB FLASHER // UnrealJammer</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>UnrealJammer WebFlasher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* Base Styling for Matrix Theme */
-        body {
-            font-family: 'Inter', monospace;
-            background-color: #000000;
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #000;
+            color: #0F0;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden; /* Prevent scrollbars from appearing */
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Behind the content */
+        }
+
+        .content-container {
+            position: relative;
+            z-index: 2; /* In front of the canvas */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            color: #00ff41; /* Default text color */
-            overflow: hidden;
-        }
-
-        /* Canvas for the Matrix Effect */
-        #matrixCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 10;
-        }
-
-        /* Main Console Card (positioned above the canvas) */
-        main {
-            position: relative;
-            z-index: 20;
             text-align: center;
-            background-color: rgba(0, 0, 0, 0.85); /* Dark transparent background */
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        main {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0F0;
             padding: 2rem 3rem;
-            border-radius: 12px;
-            max-width: 500px;
-            /* Glowing CRT effect */
-            border: 2px solid #00ff41;
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.6), 0 0 30px rgba(0, 255, 65, 0.3);
-            text-shadow: 0 0 3px #00ff41;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5), inset 0 0 15px rgba(0, 255, 0, 0.3);
         }
 
         h1 {
-            color: #ffffff; /* Brighter white for contrast title */
+            color: #0c0; /* Made the green color slightly darker */
+            text-shadow: 0 0 5px #0c0, 0 0 8px rgba(0, 255, 0, 0.3); /* Reduced the glow effect */
             margin-bottom: 0.5rem;
-            text-shadow: 0 0 5px #00ff41;
+            letter-spacing: 2px;
         }
 
         p {
-            color: #a7f3d0; /* Lighter green for body text */
+            color: #0F0;
+            text-shadow: 0 0 3px #0F0;
             margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
-        
-        /* Custom styles for the ESP Web Install Button to match the theme */
+
+        /* Styling for the web install button */
         esp-web-install-button {
-            /* This overrides the default blue color scheme */
-            --esp-web-install-button-fill-color: #00ff41;
-            --esp-web-install-button-border-color: #059669; /* emerald-600 */
-            --esp-web-install-button-text-color: #000000;
-            --esp-web-install-button-hover-fill-color: #10b981; /* emerald-500 */
+            --esp-web-install-button-fill-color: #0F0;
+            --esp-web-install-button-text-color: #000;
+            --esp-web-install-button-border-color: #0F0;
+            --esp-web-install-button-border-radius: 0px;
+            --esp-web-install-button-font-family: 'Share Tech Mono', monospace;
+            --esp-web-install-button-font-weight: bold;
+            box-shadow: 0 0 10px #0F0;
+            transition: all 0.2s ease-in-out;
         }
         
-        /* Log Container - Dark Terminal Look */
+        esp-web-install-button:hover {
+            box-shadow: 0 0 20px #0F0, 0 0 30px #0F0;
+            transform: scale(1.05);
+        }
+        
         #logs-container {
             margin-top: 1.5rem;
             text-align: left;
-            background-color: #1a1a1a;
-            color: #00ff41;
+            background-color: rgba(0, 10, 0, 0.5);
+            color: #0F0;
+            border: 1px solid #0F0;
             padding: 1rem;
-            border-radius: 8px;
             max-height: 200px;
             overflow-y: auto;
-            font-family: "Courier New", Courier, monospace;
             font-size: 0.875rem;
-            display: none;
-            /* Add glow to log box */
-            border: 1px solid #00ff41;
-            box-shadow: inset 0 0 8px rgba(0, 255, 65, 0.3);
-        }
-        /* Custom Themed Scrollbar for Logs */
-        #logs-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        #logs-container::-webkit-scrollbar-thumb {
-            background-color: #00ff41;
-            border-radius: 4px;
-        }
-        #logs-container::-webkit-scrollbar-track {
-            background: rgba(0, 255, 65, 0.1);
+            display: none; /* Hidden by default */
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.3);
         }
 
         #error-message {
             margin-top: 1rem;
-            color: #f87171; /* Red error */
+            color: #ff4141; /* A brighter red for the theme */
             font-weight: bold;
-            display: none;
+            text-shadow: 0 0 5px #ff4141;
+            display: none; /* Hidden by default */
         }
     </style>
+    <!-- Import the ESP Web Tools library -->
     <script
         type="module"
         src="https://unpkg.com/esp-web-tools@9.4.3/dist/web/install-button.js?module"
     ></script>
 </head>
 <body>
-    <!-- 1. Matrix Digital Rain Canvas -->
-    <canvas id="matrixCanvas"></canvas>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="content-container">
+        <main>
+            <h1>[ESP32]:MATRIX_FLASHER</h1>
+            <p>
+             CONNECT TARGET DEVICE [ESP32] VIA USB PORTAL. SELECT COM PORT.
+            </p>
 
-    <!-- 2. Main Console Card (Content) -->
-    <main>
-        <h1 class="text-4xl font-mono"> UnrealJammer // V-1.0</h1>
-        <p class="font-mono text-sm">
-            Accessing Web Serial... Initiate connection protocol below.
-        </p>
+            <div id="button-container"></div>
+            
+            <div id="error-message"></div>
 
-        <div id="button-container"></div>
-        
-        <div id="error-message" class="font-mono"></div>
+            <div id="logs-container">
+                <pre id="logs">> SYSTEM LOG:</pre>
+            </div>
+        </main>
+    </div>
 
-        <div id="logs-container">
-            <pre id="logs"></pre>
-        </div>
-    </main>
-
-    <!-- 3. JavaScript Logic for ESP Tools & Matrix Effect -->
     <script type="module">
-        // Get references to HTML elements
+        // --- MATRIX RAIN EFFECT ---
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキヒチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const characters = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = Math.floor(canvas.width / fontSize);
+
+        const drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 33);
+
+        // --- ESP WEB FLASHER LOGIC ---
         const buttonContainer = document.getElementById("button-container");
         const logsContainer = document.getElementById("logs-container");
         const logs = document.getElementById("logs");
         const errorMessage = document.getElementById("error-message");
 
-        // Create the install button element
         const installButton = document.createElement("esp-web-install-button");
+        
+        // --- IMPORTANT ---
+        // Replace this with the RAW URL of your own manifest.json file from GitHub.
+        installButton.manifest = "https://raw.githubusercontent.com/CaseSkyDiver343/UnrealJammer/refs/heads/main/webflash/manifest.json";
 
-        // --- IMPORTANT: Manifest URL ---
-        // Replace this with the RAW URL of your own manifest file.
-        installButton.manifest =
-            "https://raw.githubusercontent.com/CaseSkyDiver343/UnrealJammer/refs/heads/main/webflash/manifest.json";
-
-        // Function to append messages to the log view
         const logMessage = (msg) => {
-            logs.innerHTML += msg + "\n";
-            // Scroll to the bottom of the log container
+            logs.innerHTML += "\n" + msg;
             logsContainer.scrollTop = logsContainer.scrollHeight;
         };
 
-        // Listen for console output from the flasher
         installButton.addEventListener("console", (e) => {
-            logsContainer.style.display = "block"; // Show logs container
-            errorMessage.style.display = "none"; // Hide any old errors
+            logsContainer.style.display = "block";
+            errorMessage.style.display = "none";
             logMessage(e.detail.message);
         });
 
-        // Listen for error messages
         installButton.addEventListener("error", (e) => {
             console.error("Flashing Error:", e.detail.message);
-            errorMessage.innerText = `[ERROR] Flashing Failed: ${e.detail.message}`;
-            errorMessage.style.display = "block"; // Show error message
-            logsContainer.style.display = "block"; // Keep logs visible for context
-            logMessage(`[!!!] ERROR: ${e.detail.message}`);
+            errorMessage.innerText = `>> TRANSMISSION_ERROR: ${e.detail.message}`;
+            errorMessage.style.display = "block";
+            logsContainer.style.display = "none";
         });
 
-        // Listen for successful connection
         installButton.addEventListener("connected", () => {
-            console.log("Successfully connected to the device.");
-            logMessage("✅ [STATUS] Device Connected. Ready to Flash.");
-            errorMessage.style.display = "none"; // Hide errors on new connection
-            logs.innerHTML = ""; // Clear old logs for a fresh start
+            console.log("Device connected.");
+            errorMessage.style.display = "none";
+            logs.innerHTML = "> SYSTEM LOG: \n> CONNECTION ESTABLISHED... STANDBY...";
         });
         
-        // Listen for flashing start
-        installButton.addEventListener("install", () => {
-            logMessage("⚡ [INIT] Starting firmware upload...");
-        });
-        
-        // Add the button to the page
         buttonContainer.appendChild(installButton);
-    </script>
-    
-    <!-- 4. Matrix Rain Effect Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('matrixCanvas');
-            const ctx = canvas.getContext('2d');
-
-            let width = canvas.width = window.innerWidth;
-            let height = canvas.height = window.innerHeight;
-
-            window.onresize = () => {
-                width = canvas.width = window.innerWidth;
-                height = canvas.height = window.innerHeight;
-                columns = Math.floor(width / fontSize);
-                drops = [];
-                for (let i = 0; i < columns; i++) {
-                    drops[i] = 1; 
-                }
-            };
-
-            const fontSize = 16;
-            let columns = Math.floor(width / fontSize);
-            let drops = [];
-
-            for (let i = 0; i < columns; i++) {
-                drops[i] = 1;
-            }
-
-            // Katakana characters for the effect
-            const katakana = "アァカサタナハマヤラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユルグズブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨロヲゴゾドボポヴッン";
-            const characters = katakana;
-
-            function draw() {
-                // Dim the background slightly each frame for the fade effect
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                ctx.fillRect(0, 0, width, height);
-
-                // Set color and font for the drops
-                ctx.fillStyle = '#00FF41'; 
-                ctx.font = `${fontSize}px monospace`;
-
-                for (let i = 0; i < drops.length; i++) {
-                    const text = characters[Math.floor(Math.random() * characters.length)];
-                    const x = i * fontSize;
-                    const y = drops[i] * fontSize;
-
-                    ctx.fillText(text, x, y);
-
-                    // Send the drop back to the top randomly
-                    if (y > height && Math.random() > 0.975) {
-                        drops[i] = 0; 
-                    }
-
-                    drops[i]++;
-                }
-                requestAnimationFrame(draw);
-            }
-
-            // Start the animation loop
-            draw();
-        });
     </script>
 </body>
 </html>
+
+

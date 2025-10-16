@@ -277,7 +277,7 @@
     </div>
 
     <script type="module">
-        // --- MATRIX RAIN EFFECT ---
+      // --- MATRIX RAIN EFFECT ---
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -289,10 +289,12 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Expanded character set for chaotic data stream look
-        const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-+={}[]|\\:;"\'<,>./?~`';
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキヒチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const characters = katakana + latin + nums;
 
-        const fontSize = 18;
+        const fontSize = 16;
         const columns = Math.floor(canvas.width / fontSize);
 
         const drops = [];
@@ -301,37 +303,24 @@
         }
 
         function drawMatrix() {
-            // Very light fade trail
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; 
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            ctx.fillStyle = '#0F0';
             ctx.font = fontSize + 'px monospace';
 
             for (let i = 0; i < drops.length; i++) {
-                const char = characters.charAt(Math.floor(Math.random() * characters.length));
-                const y = drops[i] * fontSize;
-                const x = i * fontSize;
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-                // Set color: Bright white/cyan for the current head, then green
-                if (Math.random() > 0.98) {
-                    ctx.fillStyle = '#0FF'; // Cyan for high-intensity data points
-                } else if (Math.random() > 0.95) {
-                    ctx.fillStyle = '#FFF'; // White for stream head
-                } else {
-                    ctx.fillStyle = '#0F0';
-                }
-
-                ctx.fillText(char, x, y);
-
-                // Reset the drop or let it continue
-                if (y > canvas.height && Math.random() > 0.97) {
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
                 drops[i]++;
             }
         }
 
-        setInterval(drawMatrix, 40); // Slightly slower for a more visible drop effect
+        setInterval(drawMatrix, 33);
 
         // --- ESP WEB FLASHER LOGIC ---
         const buttonContainer = document.getElementById("button-container");
@@ -340,15 +329,13 @@
         const errorMessage = document.getElementById("error-message");
 
         const installButton = document.createElement("esp-web-install-button");
-        
-        // Use a generic firmware manifest
+
+        // --- IMPORTANT ---
+        // Replace this with the RAW URL of your own manifest.json file from GitHub.
         installButton.manifest = "https://raw.githubusercontent.com/CaseSkyDiver343/UnrealJammer/refs/heads/main/webflash/manifest.json";
 
         const logMessage = (msg) => {
-            // Thematic timestamp using HEX for extra personality
-            const now = new Date();
-            const hexTime = (now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()).toString(16).toUpperCase().padStart(4, '0');
-            logs.innerHTML += `\n[${hexTime}] >> ${msg}`;
+            logs.innerHTML += "\n" + msg;
             logsContainer.scrollTop = logsContainer.scrollHeight;
         };
 
@@ -360,7 +347,7 @@
 
         installButton.addEventListener("error", (e) => {
             console.error("Flashing Error:", e.detail.message);
-            errorMessage.innerHTML = `[FATAL] // ERROR_CODE: 0x4B0 // **${e.detail.message.toUpperCase()}** // DUMPING MEMORY & ABORTING PROTOCOL.`;
+            errorMessage.innerText = `>> TRANSMISSION_ERROR: ${e.detail.message}`;
             errorMessage.style.display = "block";
             logsContainer.style.display = "none";
         });
@@ -368,10 +355,9 @@
         installButton.addEventListener("connected", () => {
             console.log("Device connected.");
             errorMessage.style.display = "none";
-            logsContainer.style.display = "block";
-            logs.innerHTML = "> **SYSTEM LOG** :: SESSION_START: 0000001D_V2.0 \n> [OK] USB_LINK_A ESTABLISHED. DEVICE: ESP32. WAITING FOR FLASH COMMAND...";
+            logs.innerHTML = "> SYSTEM LOG: \n> CONNECTION ESTABLISHED... STANDBY...";
         });
-        
+
         buttonContainer.appendChild(installButton);
     </script>
 </body>
